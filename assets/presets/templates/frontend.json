@@ -1,0 +1,92 @@
+[
+  {
+    "id": "frontend-component",
+    "roleId": "frontend",
+    "name": "组件生成",
+    "description": "按描述生成 Flutter / React / Vue 组件",
+    "category": "生成",
+    "parameters": [
+      {
+        "name": "spec",
+        "label": "组件描述",
+        "required": true,
+        "multiline": true
+      },
+      {
+        "name": "framework",
+        "label": "框架",
+        "defaultValue": "Flutter"
+      }
+    ],
+    "body": "请使用 {{framework}} 实现一个组件：{{spec}}\n要求：可复用、有合理 props/参数；包含状态管理与样式；写明使用示例。"
+  },
+  {
+    "id": "frontend-page",
+    "roleId": "frontend",
+    "name": "页面布局",
+    "description": "依据线框描述搭建整页布局",
+    "category": "布局",
+    "parameters": [
+      {
+        "name": "layout",
+        "label": "布局描述",
+        "required": true,
+        "multiline": true
+      },
+      {
+        "name": "framework",
+        "label": "框架",
+        "defaultValue": "Flutter"
+      }
+    ],
+    "body": "请使用 {{framework}} 搭建如下页面布局：\n{{layout}}\n要求响应式与可访问性；给出主要区域结构与关键样式。"
+  },
+  {
+    "id": "frontend-refactor-style",
+    "roleId": "frontend",
+    "name": "样式重构",
+    "description": "重构杂乱样式为设计 token",
+    "category": "重构",
+    "parameters": [
+      {
+        "name": "code",
+        "label": "代码",
+        "required": true,
+        "multiline": true
+      }
+    ],
+    "body": "请把以下代码中的颜色、间距、字号抽离为统一的设计 token（命名规范、可主题化），并输出重构后代码：\n```\n{{code}}\n```"
+  },
+  {
+    "id": "frontend-ts-types",
+    "roleId": "frontend",
+    "name": "TS 类型补全",
+    "description": "由 JSON 推断 TypeScript 类型与 API 封装",
+    "category": "类型",
+    "parameters": [
+      {
+        "name": "json",
+        "label": "样例 JSON",
+        "required": true,
+        "multiline": true
+      }
+    ],
+    "body": "请基于以下 JSON 推断 TypeScript 类型定义，并写一份 fetch 封装：\n```json\n{{json}}\n```"
+  },
+  {
+    "id": "frontend-perf",
+    "roleId": "frontend",
+    "name": "性能优化",
+    "description": "诊断并优化前端性能瓶颈",
+    "category": "优化",
+    "parameters": [
+      {
+        "name": "scene",
+        "label": "性能问题场景",
+        "required": true,
+        "multiline": true
+      }
+    ],
+    "body": "针对以下场景做性能诊断与优化方案：{{scene}}\n关注：渲染、网络、内存、首屏；给出可量化的优化预期。"
+  }
+]

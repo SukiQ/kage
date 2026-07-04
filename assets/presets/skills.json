@@ -1,0 +1,53 @@
+{
+  "claude-api": [
+    "backend",
+    "frontend"
+  ],
+  "init": [
+    "backend",
+    "frontend",
+    "qa"
+  ],
+  "review": [
+    "backend",
+    "qa"
+  ],
+  "security-review": [
+    "backend",
+    "qa"
+  ],
+  "biaoshu-writer-pro-5.4.0": [
+    "product"
+  ],
+  "docx": [
+    "product"
+  ],
+  "frontend-design": [
+    "frontend"
+  ],
+  "flutter-animating-apps": [
+    "frontend"
+  ],
+  "flutter-building-layouts": [
+    "frontend"
+  ],
+  "flutter-theming-apps": [
+    "frontend"
+  ],
+  "java-springboot": [
+    "backend"
+  ],
+  "zznode-code-quality-governance": [
+    "backend",
+    "qa"
+  ],
+  "zz-claude-git-ai-adoption": [
+    "backend",
+    "frontend",
+    "qa"
+  ],
+  "open-code-review:review": [
+    "backend",
+    "qa"
+  ]
+}

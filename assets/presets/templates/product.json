@@ -1,0 +1,92 @@
+[
+  {
+    "id": "pm-requirement-doc",
+    "roleId": "product",
+    "name": "需求文档",
+    "description": "基于业务想法输出需求文档骨架",
+    "category": "需求",
+    "parameters": [
+      {
+        "name": "topic",
+        "label": "需求主题",
+        "required": true,
+        "multiline": true
+      },
+      {
+        "name": "audience",
+        "label": "目标用户",
+        "required": true
+      }
+    ],
+    "body": "请为以下需求编写一份完整的 PRD：\n主题：{{topic}}\n目标用户：{{audience}}\n\n包含：背景与目标、用户故事、功能范围（含 MVP）、非功能需求、验收标准、上线指标。"
+  },
+  {
+    "id": "pm-prd-breakdown",
+    "roleId": "product",
+    "name": "PRD 拆解",
+    "description": "将 PRD 拆解为可执行的迭代任务",
+    "category": "需求",
+    "parameters": [
+      {
+        "name": "prd",
+        "label": "PRD 内容",
+        "required": true,
+        "multiline": true
+      }
+    ],
+    "body": "请把以下 PRD 拆解为迭代任务（按里程碑、含依赖、估时）：\n```\n{{prd}}\n```"
+  },
+  {
+    "id": "pm-user-story",
+    "roleId": "product",
+    "name": "用户故事",
+    "description": "从功能点生成标准用户故事",
+    "category": "需求",
+    "parameters": [
+      {
+        "name": "feature",
+        "label": "功能点",
+        "required": true,
+        "multiline": true
+      }
+    ],
+    "body": "请把以下功能点写成标准用户故事（As a / I want / so that）并给出验收标准：\n{{feature}}"
+  },
+  {
+    "id": "pm-acceptance",
+    "roleId": "product",
+    "name": "验收标准",
+    "description": "为功能生成 Gherkin 风格验收用例",
+    "category": "验收",
+    "parameters": [
+      {
+        "name": "feature",
+        "label": "功能描述",
+        "required": true,
+        "multiline": true
+      }
+    ],
+    "body": "请为以下功能生成 Given/When/Then 的验收用例，覆盖正常流与异常流：\n{{feature}}"
+  },
+  {
+    "id": "pm-competitor",
+    "roleId": "product",
+    "name": "竞品对比",
+    "description": "输出竞品对比矩阵",
+    "category": "调研",
+    "parameters": [
+      {
+        "name": "products",
+        "label": "竞品列表",
+        "required": true,
+        "multiline": true
+      },
+      {
+        "name": "dimensions",
+        "label": "对比维度",
+        "defaultValue": "功能 / 体验 / 价格 / 生态"
+      }
+    ],
+    "body": "请输出以下竞品的对比矩阵：\n竞品：{{products}}\n对比维度：{{dimensions}}\n并给出对我方产品的差异化建议。"
+  }
+]

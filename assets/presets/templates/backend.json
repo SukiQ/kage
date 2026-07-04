@@ -1,0 +1,106 @@
+[
+  {
+    "id": "backend-api-design",
+    "roleId": "backend",
+    "name": "接口设计",
+    "description": "依据业务描述设计 RESTful 接口契约",
+    "category": "设计",
+    "parameters": [
+      {
+        "name": "business",
+        "label": "业务场景",
+        "hint": "如：用户登录",
+        "required": true,
+        "multiline": true
+      },
+      {
+        "name": "framework",
+        "label": "技术栈",
+        "hint": "如：Spring Boot + JPA",
+        "defaultValue": "Spring Boot"
+      }
+    ],
+    "body": "请基于以下业务需求设计 RESTful 接口契约：\n业务场景：{{business}}\n技术栈：{{framework}}\n\n请输出：1) 接口列表（method/path/请求体/响应体）2) 主要数据模型（含校验规则）3) 错误码规范。"
+  },
+  {
+    "id": "backend-crud",
+    "roleId": "backend",
+    "name": "生成 CRUD",
+    "description": "为指定实体生成 Controller/Service/Repository",
+    "category": "生成",
+    "parameters": [
+      {
+        "name": "entity",
+        "label": "实体名",
+        "hint": "如：User",
+        "required": true
+      },
+      {
+        "name": "fields",
+        "label": "字段列表",
+        "hint": "如：id:Long, name:String, email:String",
+        "required": true,
+        "multiline": true
+      }
+    ],
+    "body": "为实体 {{entity}} 生成完整 CRUD：字段：{{fields}}\n要求：Controller/Service/Repository/DTO；含参数校验；分页查询；统一响应包装。"
+  },
+  {
+    "id": "backend-sql-optimize",
+    "roleId": "backend",
+    "name": "SQL 优化",
+    "description": "分析慢查询并给出优化建议",
+    "category": "优化",
+    "parameters": [
+      {
+        "name": "sql",
+        "label": "SQL",
+        "required": true,
+        "multiline": true
+      },
+      {
+        "name": "engine",
+        "label": "数据库",
+        "defaultValue": "MySQL 8"
+      }
+    ],
+    "body": "请分析并优化以下 SQL（{{engine}}）：\n```\n{{sql}}\n```\n\n输出：1) 现有问题（全表扫描/索引失效等）2) 重写后的 SQL 3) 建议索引 4) 预估执行计划改善。"
+  },
+  {
+    "id": "backend-unit-test",
+    "roleId": "backend",
+    "name": "单元测试",
+    "description": "为指定类生成 JUnit 单元测试",
+    "category": "测试",
+    "parameters": [
+      {
+        "name": "code",
+        "label": "代码",
+        "required": true,
+        "multiline": true
+      },
+      {
+        "name": "framework",
+        "label": "测试框架",
+        "defaultValue": "JUnit5 + Mockito"
+      }
+    ],
+    "body": "请用 {{framework}} 为以下代码生成单元测试，覆盖正常分支与异常分支：\n```\n{{code}}\n```"
+  },
+  {
+    "id": "backend-code-review",
+    "roleId": "backend",
+    "name": "Code Review",
+    "description": "评审代码并指出风险",
+    "category": "评审",
+    "parameters": [
+      {
+        "name": "code",
+        "label": "代码",
+        "required": true,
+        "multiline": true
+      }
+    ],
+    "body": "请评审以下代码，从安全、性能、可维护性、可测试性四个维度给出问题清单和改进建议：\n```\n{{code}}\n```"
+  }
+]

@@ -1,0 +1,87 @@
+[
+  {
+    "id": "qa-test-case",
+    "roleId": "qa",
+    "name": "测试用例",
+    "description": "依据功能描述生成测试用例",
+    "category": "用例",
+    "parameters": [
+      {
+        "name": "feature",
+        "label": "功能描述",
+        "required": true,
+        "multiline": true
+      }
+    ],
+    "body": "请为以下功能生成测试用例（含用例编号/前置条件/步骤/预期结果/优先级），覆盖功能、边界、异常、安全：\n{{feature}}"
+  },
+  {
+    "id": "qa-automation",
+    "roleId": "qa",
+    "name": "自动化脚本",
+    "description": "生成 UI / 接口自动化脚本",
+    "category": "自动化",
+    "parameters": [
+      {
+        "name": "scenario",
+        "label": "测试场景",
+        "required": true,
+        "multiline": true
+      },
+      {
+        "name": "framework",
+        "label": "测试框架",
+        "defaultValue": "Playwright"
+      }
+    ],
+    "body": "请使用 {{framework}} 实现以下自动化测试场景，含 setup/teardown 与断言：\n{{scenario}}"
+  },
+  {
+    "id": "qa-bug-repro",
+    "roleId": "qa",
+    "name": "Bug 复现",
+    "description": "把模糊现象整理为最小复现脚本",
+    "category": "缺陷",
+    "parameters": [
+      {
+        "name": "phenomenon",
+        "label": "现象描述",
+        "required": true,
+        "multiline": true
+      }
+    ],
+    "body": "请把以下现象整理为最小可复现步骤，并标注可能的影响范围与定位思路：\n{{phenomenon}}"
+  },
+  {
+    "id": "qa-regression",
+    "roleId": "qa",
+    "name": "回归用例",
+    "description": "依据变更点生成回归用例集",
+    "category": "回归",
+    "parameters": [
+      {
+        "name": "change",
+        "label": "变更点",
+        "required": true,
+        "multiline": true
+      }
+    ],
+    "body": "请基于以下变更生成回归用例集（含影响面分析）：\n{{change}}"
+  },
+  {
+    "id": "qa-api-test",
+    "roleId": "qa",
+    "name": "接口测试",
+    "description": "为接口生成测试用例与边界数据",
+    "category": "接口",
+    "parameters": [
+      {
+        "name": "api",
+        "label": "接口定义",
+        "required": true,
+        "multiline": true
+      }
+    ],
+    "body": "请为以下接口生成测试用例（参数边界、鉴权、并发、幂等），并附上 curl 示例：\n```\n{{api}}\n```"
+  }
+]
