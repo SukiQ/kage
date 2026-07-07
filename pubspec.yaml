@@ -62,6 +62,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.4
 
   # 代码生成
   build_runner: ^2.4.13
@@ -90,3 +91,10 @@ flutter:
           weight: 600
         - asset: assets/fonts/MiSans-Bold.ttf
           weight: 700
+
+flutter_launcher_icons:
+  image_path: "assets/images/logo.png"
+  windows:
+    generate: true
+  macos:
+    generate: true

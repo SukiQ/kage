@@ -3,21 +3,21 @@ import 'package:flutter/material.dart';
 import '../shared/theme/kage_tokens.dart';
 
 /// Kage 主题：简约扁平现代 —— 中性白/黑 + 现代灰阶为底，
-/// 点缀色（primary）随当前角色切换为火影五影主题色，全局 MiSans，圆润（radius≈16）。
+/// 点缀色（primary）为火影火焰橙（取自 logo 主色），全局 MiSans，圆润（radius≈16）。
 class KageTheme {
   KageTheme._();
 
   static const String fontMain = 'MiSans';
 
-  /// 火影橙黄固定点缀色（不再随角色切换）。
-  static const Color accent = Color(0xFFB91C1C);
+  /// 火影火焰橙固定点缀色（取自 logo 主渐变 #FF9A1B→#C43D2A，不再随角色切换）。
+  static const Color accent = Color(0xFFEF731D);
   static const Color onAccent = Color(0xFFFFFFFF);
 
   static ThemeData get light => _build(_scheme(true), KageDesignTokens.light);
 
   static ThemeData get dark => _build(_scheme(false), KageDesignTokens.dark);
 
-  // 中性灰阶底 + 火影橙黄 primary
+  // 中性灰阶底 + 火影火焰橙 primary（取自 logo）
   static ColorScheme _scheme(bool light) {
     const accent = KageTheme.accent;
     // 全局底色统一：所有 surface* 同色（消除多层级灰拼色），
@@ -30,7 +30,7 @@ class KageTheme {
       onPrimary: onAccent,
       primaryContainer: accent.withValues(alpha: 0.16),
       onPrimaryContainer: light
-          ? const Color(0xFFB45309)
+          ? const Color(0xFF8A2C12)
           : const Color(0xFFFFB020),
       secondary: light ? const Color(0xFF6B7178) : const Color(0xFF9AA0A8),
       onSecondary: light ? const Color(0xFFFFFFFF) : const Color(0xFF141619),

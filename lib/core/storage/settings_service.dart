@@ -11,6 +11,7 @@ class SettingsService {
   final SharedPreferences _prefs;
 
   static const _kClaudeExecutable = 'claudeExecutable';
+  static const _kClaudeModel = 'claudeModel'; // claude CLI --model 参数
   static const _kActiveProjectId = 'activeProjectId';
   static const _kOnboarded = 'onboarded';
   static const _kThemeMode = 'themeMode'; // light | dark | system
@@ -29,6 +30,17 @@ class SettingsService {
       await _prefs.remove(_kClaudeExecutable);
     } else {
       await _prefs.setString(_kClaudeExecutable, value);
+    }
+  }
+
+  /// AI 会话使用的 claude 模型（默认 'default'，即 claude CLI 自行决定）。
+  String get claudeModel => _prefs.getString(_kClaudeModel) ?? 'default';
+
+  Future<void> setClaudeModel(String value) async {
+    if (value.isEmpty || value == 'default') {
+      await _prefs.remove(_kClaudeModel);
+    } else {
+      await _prefs.setString(_kClaudeModel, value);
     }
   }
 

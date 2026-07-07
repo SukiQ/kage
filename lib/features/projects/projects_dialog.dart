@@ -1,7 +1,10 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path/path.dart' as p;
 
 import '../../app/providers.dart';
+import '../../data/models/project.dart';
 import '../../shared/theme/kage_icons.dart';
 
 class ProjectsDialog extends ConsumerStatefulWidget {
@@ -12,128 +15,128 @@ class ProjectsDialog extends ConsumerStatefulWidget {
 }
 
 class _ProjectsDialogState extends ConsumerState<ProjectsDialog> {
-  final _nameController = TextEditingController();
-  final _pathController = TextEditingController();
-  final _sonarKeyController = TextEditingController();
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _pathController.dispose();
-    _sonarKeyController.dispose();
-    super.dispose();
-  }
+  String? _selectedPath;
+  String? _extractedName;
 
   Future<void> _pick() async {
-    final picked = await showDialog<String>(
-      context: context,
-      builder: (_) => _ManualPathDialog(initial: _pathController.text),
-    );
-    if (picked != null) _pathController.text = picked;
+    final result = await FilePicker.platform.getDirectoryPath();
+    if (result != null) {
+      setState(() {
+        _selectedPath = result;
+        _extractedName = p.basename(result);
+      });
+    }
   }
 
   Future<void> _save() async {
-    final name = _nameController.text.trim();
-    final path = _pathController.text.trim();
-    if (name.isEmpty || path.isEmpty) return;
+    if (_selectedPath == null || _extractedName == null) return;
     final repo = await ref.read(projectRepositoryProvider.future);
-    final sonarKey = _sonarKeyController.text.trim();
-    await repo.add(
-      name: name,
-      path: path,
-      sonarProjectKey: sonarKey.isEmpty ? null : sonarKey,
+    final project = await repo.add(
+      name: _extractedName!,
+      path: _selectedPath!,
     );
-    _nameController.clear();
-    _pathController.clear();
-    _sonarKeyController.clear();
+    // 自动设为当前项目
+    ref.read(activeProjectProvider.notifier).state = project;
+    final s = await ref.read(settingsServiceProvider.future);
+    await s.setActiveProjectId(project.id);
+    setState(() {
+      _selectedPath = null;
+      _extractedName = null;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final asyncProjects = ref.watch(projectRepositoryProvider);
+    final cs = Theme.of(context).colorScheme;
     return AlertDialog(
-      title: const Text('项目（工作目录）'),
+      title: const Text('项目管理'),
       content: SizedBox(
-        width: 560,
+        width: 600,
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextField(
-              controller: _nameController,
-              decoration: const InputDecoration(labelText: '名称'),
-            ),
+            // ── 添加新项目 ──────────────────────────────────────────────────
+            Text('添加项目', style: Theme.of(context).textTheme.labelMedium),
             const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _pathController,
-                    decoration: const InputDecoration(labelText: '工作目录'),
-                  ),
-                ),
-                IconButton(
-                  onPressed: _pick,
-                  icon: const Icon(KageIcons.folderOpen),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _sonarKeyController,
-              decoration: const InputDecoration(
-                labelText: 'SonarQube Project Key（可空）',
-                helperText: '用于代码审查时拉取扫描报告',
+            // 选择目录按钮 + 显示选中路径和提取的项目名
+            OutlinedButton.icon(
+              onPressed: _pick,
+              icon: const Icon(KageIcons.folderOpen, size: 18),
+              label: Text(_selectedPath == null ? '选择项目目录' : '更换目录'),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 48),
+                alignment: Alignment.centerLeft,
               ),
             ),
-            const Divider(height: 24),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                '已添加项目',
-                style: Theme.of(context).textTheme.titleSmall,
+            if (_selectedPath != null) ...[
+              const SizedBox(height: 8),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: cs.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: cs.outlineVariant),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(children: [
+                      Icon(Icons.badge_outlined, size: 16, color: cs.primary),
+                      const SizedBox(width: 6),
+                      Text('项目名称：', style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
+                      Text(_extractedName!, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                    ]),
+                    const SizedBox(height: 4),
+                    Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Icon(Icons.folder_outlined, size: 16, color: cs.onSurfaceVariant),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          _selectedPath!,
+                          style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant, fontFamily: 'monospace'),
+                        ),
+                      ),
+                    ]),
+                  ],
+                ),
               ),
-            ),
+            ],
+            const SizedBox(height: 16),
+            // ── 已有项目列表 ────────────────────────────────────────────────
+            Text('已添加项目', style: Theme.of(context).textTheme.labelMedium),
+            const SizedBox(height: 4),
             Flexible(
               child: asyncProjects.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (e, _) => Text('加载失败: $e'),
-                data: (repo) => ListView(
-                  shrinkWrap: true,
-                  children: repo.all
-                      .map(
-                        (p) => ListTile(
-                          title: Text(p.name),
-                          subtitle: Text(p.path),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(KageIcons.check),
-                                tooltip: '设为当前',
-                                onPressed: () {
-                                  ref
-                                          .read(activeProjectProvider.notifier)
-                                          .state =
-                                      p;
-                                  ref
-                                      .read(settingsServiceProvider.future)
-                                      .then((s) => s.setActiveProjectId(p.id));
-                                  Navigator.of(context).pop();
-                                },
-                              ),
-                              IconButton(
-                                icon: const Icon(KageIcons.delete),
-                                tooltip: '删除',
-                                onPressed: () async {
-                                  await repo.delete(p.id);
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      )
-                      .toList(),
-                ),
+                data: (repo) {
+                  final list = repo.all;
+                  if (list.isEmpty) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      child: Text('暂无项目', style: TextStyle(color: Colors.grey)),
+                    );
+                  }
+                  return ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: list.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    itemBuilder: (_, i) => _ProjectRow(
+                      project: list[i],
+                      repo: repo,
+                      onActivate: () {
+                        ref.read(activeProjectProvider.notifier).state = list[i];
+                        ref.read(settingsServiceProvider.future)
+                            .then((s) => s.setActiveProjectId(list[i].id));
+                        Navigator.of(context).pop();
+                      },
+                      onChanged: () => setState(() {}),
+                    ),
+                  );
+                },
               ),
             ),
           ],
@@ -144,39 +147,64 @@ class _ProjectsDialogState extends ConsumerState<ProjectsDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('关闭'),
         ),
-        FilledButton(onPressed: _save, child: const Text('添加')),
+        FilledButton(
+          onPressed: _selectedPath == null ? null : _save,
+          child: const Text('添加项目'),
+        ),
       ],
     );
   }
 }
 
-/// 简化版：手工输入路径。后续可接入 file_picker 替换。
-class _ManualPathDialog extends StatelessWidget {
-  const _ManualPathDialog({required this.initial});
+/// 项目行：显示名称、路径，支持设为当前与删除。
+/// 项目名称即作为 SonarQube project key，无需单独维护。
+class _ProjectRow extends StatelessWidget {
+  const _ProjectRow({
+    required this.project,
+    required this.repo,
+    required this.onActivate,
+    required this.onChanged,
+  });
 
-  final String initial;
+  final KageProject project;
+  final dynamic repo; // ProjectRepository
+  final VoidCallback onActivate;
+  final VoidCallback onChanged;
 
   @override
   Widget build(BuildContext context) {
-    final controller = TextEditingController(text: initial);
-    return AlertDialog(
-      title: const Text('输入工作目录绝对路径'),
-      content: TextField(
-        controller: controller,
-        decoration: const InputDecoration(
-          hintText: '/absolute/path/to/project',
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+      child: Row(children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(project.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+              Text(
+                project.path,
+                style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('取消'),
+        IconButton(
+          icon: const Icon(KageIcons.check, size: 18),
+          tooltip: '设为当前',
+          onPressed: onActivate,
         ),
-        FilledButton(
-          onPressed: () => Navigator.of(context).pop(controller.text),
-          child: const Text('确定'),
+        IconButton(
+          icon: const Icon(KageIcons.delete, size: 18),
+          tooltip: '删除',
+          onPressed: () async {
+            await repo.delete(project.id);
+            onChanged();
+          },
         ),
-      ],
+      ]),
     );
   }
 }

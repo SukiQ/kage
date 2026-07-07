@@ -24,6 +24,7 @@ class ClaudeProcess {
   String? _sessionId;
   String? _cwd;
   bool _closed = false;
+  bool _disposed = false;
 
   final _eventController = StreamController<ClaudeEvent>.broadcast();
   final _stderrController = StreamController<String>.broadcast();
@@ -48,6 +49,7 @@ class ClaudeProcess {
     String permissionMode = 'default',
     String? model,
     Map<String, String>? environment,
+    bool bypassPermissions = false,
   }) async {
     if (isRunning) {
       throw StateError('ClaudeProcess already running');
@@ -59,8 +61,10 @@ class ClaudeProcess {
       '--output-format',
       'stream-json',
       '--verbose',
-      '--permission-mode',
-      permissionMode,
+      if (bypassPermissions)
+        '--dangerously-skip-permissions'
+      else
+        ...['--permission-mode', permissionMode],
       if (model != null && model != 'default') ...['--model', model],
       if (resumeSessionId != null) ...['--resume', resumeSessionId],
     ];
@@ -101,7 +105,7 @@ class ClaudeProcess {
             }
           },
           onError: (Object e) => _logger.w('stdout stream error: $e'),
-          onDone: () => _logger.i('claude stdout closed'),
+          onDone: () => _logger.d('claude stdout closed'),
         );
   }
 
@@ -150,7 +154,8 @@ class ClaudeProcess {
   void _handleExit(int code) {
     if (_closed) return;
     _closed = true;
-    _logger.i('claude exited with code $code');
+    // 主动 dispose（taskkill）会产生非 0 退出码，属预期，不打日志以免误判为崩溃。
+    if (!_disposed) _logger.i('claude exited with code $code');
     if (!_doneCompleter.isCompleted) _doneCompleter.complete();
     _eventController.close();
     _stderrController.close();
@@ -159,6 +164,7 @@ class ClaudeProcess {
   Future<void> dispose() async {
     final proc = _process;
     if (proc == null) return;
+    _disposed = true;
     try {
       await interrupt();
     } catch (_) {}

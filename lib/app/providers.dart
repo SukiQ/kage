@@ -2,16 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logger/logger.dart';
 
+import '../core/analysis/analysis_dimension.dart';
 import '../core/claude/claude_detector.dart';
-import '../core/sonar/sonar_report.dart';
+import '../core/scanners/scan_result.dart';
+import '../core/scanners/scanner.dart';
+import '../core/scanners/sonarqube_scanner.dart';
 import '../core/storage/settings_service.dart';
+import '../data/models/issue_record.dart';
 import '../data/models/project.dart';
-import '../data/models/prompt_template.dart';
-import '../data/models/skill.dart';
-import '../data/presets/preset_loader.dart';
+import '../data/repositories/issue_repository.dart';
 import '../data/repositories/project_repository.dart';
-import '../data/repositories/session_repository.dart';
-import '../data/repositories/skills_repository.dart';
+import '../data/repositories/rule_note_repository.dart';
 
 final loggerProvider = Provider<Logger>(
   (_) => Logger(printer: SimplePrinter()),
@@ -25,34 +26,46 @@ final claudeDetectorProvider = Provider<ClaudeDetector>((ref) {
   return ClaudeDetector();
 });
 
-/// 当前激活项目（全局），由 HomeView 与 ChatView 共用。
+/// 当前激活项目（全局）
 final activeProjectProvider = StateProvider<KageProject?>((ref) => null);
 
-/// 最近一次代码审查的 SonarQube 报告（审查后保留，供侧栏问题查看器使用）。
-final reviewReportProvider = StateProvider<SonarReport?>((ref) => null);
+/// 当前选中的分析维度
+final activeDimensionProvider = StateProvider<AnalysisDimension>(
+  (ref) => AnalysisDimension.codeQuality,
+);
 
-/// 已忽略的 issue 标识集合（key = `component:line:rule`），从侧栏列表隐藏。
+/// AI 会话使用的模型（claude CLI --model 参数值，如 default/sonnet/opus/haiku）
+final activeModelProvider = StateProvider<String>((ref) => 'default');
+
+/// 最近一次统一扫描结果
+final activeScanResultProvider = StateProvider<ScanResult?>((ref) => null);
+
+/// 已忽略的 issue 标识集合（本次会话内存）
 final ignoredIssuesProvider = StateProvider<Set<String>>((ref) => {});
 
-final projectRepositoryProvider = FutureProvider<ProjectRepository>((
-  ref,
-) async {
+/// 当前项目已加载的 Issue 生命周期记录（内存缓存）
+final issueRecordsProvider = StateProvider<List<IssueRecord>>((ref) => const []);
+
+// ── 仓库 ────────────────────────────────────────────────────────────────────
+
+final projectRepositoryProvider = FutureProvider<ProjectRepository>((ref) async {
   return ProjectRepository.create();
 });
 
-final sessionRepositoryProvider = FutureProvider<SessionRepository>((
-  ref,
-) async {
-  return SessionRepository.create();
+final issueRepositoryProvider = FutureProvider<IssueRepository>((ref) async {
+  return IssueRepository.create();
 });
 
-final templatesProvider = FutureProvider<List<PromptTemplate>>((ref) async {
-  return PresetLoader.loadTemplates();
+/// 全局 rule→修复附言记忆
+final ruleNoteRepositoryProvider = FutureProvider<RuleNoteRepository>((ref) async {
+  return RuleNoteRepository.create();
 });
 
-final skillsProvider = FutureProvider<List<KageSkill>>((ref) async {
-  final repo = SkillsRepository();
-  return repo.scan();
+// ── 扫描器 ──────────────────────────────────────────────────────────────────
+
+final activeScannerProvider = FutureProvider<Scanner>((ref) async {
+  final settings = await ref.watch(settingsServiceProvider.future);
+  return SonarQubeScanner(settings);
 });
 
 final claudeExecutableProvider = FutureProvider<String?>((ref) async {
@@ -63,8 +76,8 @@ final claudeExecutableProvider = FutureProvider<String?>((ref) async {
   return detector.detect();
 });
 
-/// 主题模式：build() 立即返回 system 不阻塞首帧；[init] 异步读取持久化值覆盖；
-/// [set] 同时落盘到 SharedPreferences。
+// ── 主题 ─────────────────────────────────────────────────────────────────────
+
 final themeModeProvider = NotifierProvider<ThemeModeNotifier, ThemeMode>(
   ThemeModeNotifier.new,
 );

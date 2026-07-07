@@ -1,7 +1,9 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
+import 'sonar_error.dart';
 import 'sonar_report.dart';
 
 /// 调用 SonarQube REST API 拉取项目扫描报告。
@@ -28,17 +30,38 @@ class SonarClient {
   /// 拉取完整报告：issues（截断）+ measures + 质量门禁。
   Future<SonarReport> fetchReport(String projectKey) async {
     final dio = _dio();
-    final issues = await _fetchIssues(dio, projectKey);
-    final measures = await _fetchMeasures(dio, projectKey);
-    final qg = await _fetchQualityGate(dio, projectKey);
-    return SonarReport(
-      issues: issues.kept,
-      measures: measures,
-      qualityGateStatus: qg,
-      totalIssues: issues.total,
-      severityCounts: issues.severityCounts,
-      projectKey: projectKey,
-    );
+    try {
+      final issues = await _fetchIssues(dio, projectKey);
+      final measures = await _fetchMeasures(dio, projectKey);
+      final qg = await _fetchQualityGate(dio, projectKey);
+      return SonarReport(
+        issues: issues.kept,
+        measures: measures,
+        qualityGateStatus: qg,
+        totalIssues: issues.total,
+        severityCounts: issues.severityCounts,
+        projectKey: projectKey,
+      );
+    } catch (e) {
+      // 转换为友好错误，便于 UI 直接展示
+      if (e is SonarApiException) rethrow;
+      throw SonarApiException(describeSonarError(e));
+    }
+  }
+
+  /// 查询后台分析任务状态（用于轮询等待扫描完成）
+  Future<String?> fetchAnalysisStatus(String projectKey) async {
+    final dio = _dio();
+    try {
+      final res = await dio.get(
+        '/api/ce/component',
+        queryParameters: {'component': projectKey},
+      );
+      final current = res.data['current'] as Map<String, dynamic>?;
+      return current?['status'] as String?; // SUCCESS / FAILED / IN_PROGRESS / PENDING / null
+    } on DioException {
+      return null;
+    }
   }
 
   Future<_IssuesResult> _fetchIssues(Dio dio, String key) async {
@@ -48,7 +71,7 @@ class SonarClient {
         'componentKeys': key,
         'ps': 500,
         'facets': 'severities,types',
-        's': 'FILE_DIR',
+        's': 'FILE_LINE',
       },
     );
     final data = res.data as Map<String, dynamic>;
@@ -56,6 +79,7 @@ class SonarClient {
     final total =
         (data['paging'] as Map<String, dynamic>?)?['total'] as int? ??
         list.length;
+    debugPrint('[kage-sonar] issues/search: total=$total returned=${list.length}');
 
     // 全量 severity 计数（来自 facet）
     final severityCounts = <String, int>{};
