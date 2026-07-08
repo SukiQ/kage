@@ -89,33 +89,39 @@ $context
   }
 
   /// 单个问题的修复指令：让 AI 直接修改项目代码文件修复该问题。
-  static String buildFixSingleMessage(IssueRecord issue, String? note) {
-    final buf = StringBuffer('''
-请直接修改项目代码文件，修复以下 SonarQube 问题：
-
-- 文件：${issue.component}:${issue.line ?? '-'}
-- 规则（rule）：${issue.rule}
-- 问题描述：${issue.message}
-''');
+  /// [dimension] 为 securityReview 时切换为安全加固措辞，默认代码质量。
+  static String buildFixSingleMessage(
+    IssueRecord issue,
+    String? note, {
+    AnalysisDimension dimension = AnalysisDimension.codeQuality,
+  }) {
+    final isSecurity = dimension == AnalysisDimension.securityReview;
+    final buf = StringBuffer(isSecurity
+        ? '请直接修改项目代码文件，修复以下安全问题（漏洞/安全热点），完成安全加固：\n\n'
+        : '请直接修改项目代码文件，修复以下 SonarQube 问题：\n\n');
+    buf.writeln('- 文件：${issue.component}:${issue.line ?? '-'}');
+    buf.writeln('- 规则（rule）：${issue.rule}');
+    buf.writeln('- 问题描述：${issue.message}');
     if (note != null && note.trim().isNotEmpty) {
       buf.writeln('- 修复附言（用户指定的修复方式/偏好）：${note.trim()}');
     }
-    buf.write('''
-
-要求：
-1. 定位到对应文件与代码行，直接修改源码完成修复
-2. 保持修复最小化，不引入新问题
-3. 修复完成后简要说明你改动了什么''');
+    buf.write(isSecurity
+        ? '\n要求：\n1. 定位到对应文件与代码行，按安全编码规范修复（输入校验、参数化查询、最小权限、敏感信息脱敏等），彻底消除该漏洞\n2. 保持修复最小化，不引入新的安全问题或回归\n3. 修复完成后简要说明改动内容及为何安全'
+        : '\n要求：\n1. 定位到对应文件与代码行，直接修改源码完成修复\n2. 保持修复最小化，不引入新问题\n3. 修复完成后简要说明你改动了什么');
     return buf.toString();
   }
 
-  /// 批量修复指令：让 AI 逐一修复多个 SonarQube 问题。
+  /// 批量修复指令：让 AI 逐一修复多个问题。
+  /// [dimension] 为 securityReview 时切换为安全加固措辞，默认代码质量。
   static String buildFixAllMessage(
     List<IssueRecord> issues,
-    Map<String, String> notes,
-  ) {
-    final buf = StringBuffer(
-        '请直接修改项目代码文件，逐一修复以下 ${issues.length} 个 SonarQube 问题：\n\n');
+    Map<String, String> notes, {
+    AnalysisDimension dimension = AnalysisDimension.codeQuality,
+  }) {
+    final isSecurity = dimension == AnalysisDimension.securityReview;
+    final buf = StringBuffer(isSecurity
+        ? '请直接修改项目代码文件，逐一修复以下 ${issues.length} 个安全问题（漏洞/安全热点），完成安全加固：\n\n'
+        : '请直接修改项目代码文件，逐一修复以下 ${issues.length} 个 SonarQube 问题：\n\n');
     for (var i = 0; i < issues.length; i++) {
       final it = issues[i];
       buf.writeln('${i + 1}. [${it.component}:${it.line ?? '-'}] '
@@ -125,12 +131,9 @@ $context
         buf.writeln('   附言：$note');
       }
     }
-    buf.write('''
-
-要求：
-1. 逐条定位并修改源码，每个问题都要实际修复
-2. 相同 rule 的问题尽量用一致的方式修复
-3. 完成后按列表简要说明每条的改动''');
+    buf.write(isSecurity
+        ? '\n要求：\n1. 逐条定位并修改源码，按安全编码规范彻底修复每个安全问题\n2. 相同 rule 的问题用一致的安全修复方式\n3. 完成后按列表简要说明每条的改动及为何安全'
+        : '\n要求：\n1. 逐条定位并修改源码，每个问题都要实际修复\n2. 相同 rule 的问题尽量用一致的方式修复\n3. 完成后按列表简要说明每条的改动''');
     return buf.toString();
   }
 

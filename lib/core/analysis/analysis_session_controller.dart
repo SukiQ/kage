@@ -146,19 +146,21 @@ class AnalysisSessionController extends StateNotifier<AnalysisState> {
     );
   }
 
-  /// 启动 AI 修复会话（复用 codeQuality 维度的侧边栏展示修复过程）。
+  /// 启动 AI 修复会话。[dimension] 决定修复过程展示在哪个维度的侧边栏，
+  /// 默认 codeQuality（向后兼容）；安全审查修复传 securityReview。
   /// [prompt] 由调用方构造（单个或批量修复指令）；
   /// [onComplete] 在会话正常结束时触发，用于把对应 issue 标记为已修复。
   Future<void> startFix({
     required KageProject project,
     required String prompt,
+    AnalysisDimension dimension = AnalysisDimension.codeQuality,
     void Function()? onComplete,
   }) async {
     await _runSession(
       project: project,
       prompt: prompt,
       info: '正在启动 AI 修复…',
-      dimension: AnalysisDimension.codeQuality,
+      dimension: dimension,
       onComplete: onComplete,
     );
   }
