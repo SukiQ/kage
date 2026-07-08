@@ -16,9 +16,11 @@ class _KageAppState extends ConsumerState<KageApp> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => ref.read(themeModeProvider.notifier).init(),
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      ref.read(themeModeProvider.notifier).init();
+      final s = await ref.read(settingsServiceProvider.future);
+      ref.read(activeModelProvider.notifier).state = s.claudeModel;
+    });
   }
 
   @override

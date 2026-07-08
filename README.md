@@ -1,43 +1,69 @@
-# Kage —— 企业级 Claude Code 可视化 IDE
+# Kage —— 企业级代码质量治理 IDE
 
-把 Claude Code 包装成给非技术/不同角色员工也能一键用的桌面 IDE。
-覆盖 **后端 / 前端 / 产品 / 测试** 四个角色，每个角色看到专属的 Prompt 模板与 Skills。
-跨平台：**macOS** 与 **Windows**。
+面向工程团队的桌面 IDE，对项目做**扫描 → 分析 → 修复 → 验证**的全流程质量治理，覆盖代码质量、安全审查、架构分析、性能分析、质量测试五大维度。跨平台：**macOS** 与 **Windows**。
+
+> 关键前提：本机已安装 Claude Code CLI（`claude --version` 可用）。AI 分析与修复能力由 Claude Code 提供，安装见 <https://claude.com/claude-code>
+
+---
 
 ## 核心特性
 
-- **角色化入口**：切换角色即换工作台，模板与 Skill 自动按角色过滤。
-- **可视化对话**：流式渲染 Claude 的思考、文本、工具调用与结果，Markdown 实时排版。
-- **20 个内置 Prompt 模板**：每角色 5 个高频任务，填表即生成。
-- **Skill 一键触发**：扫描 `~/.claude/skills/`，按角色映射展示，点击发 `/<name>`。
-- **会话历史**：每个项目下的会话自动持久化，支持 `--resume` 续接上下文。
-- **企业 API Key**：首启填入后写入 `~/.claude/settings.json`，与本机 claude 共享。
-- **零运维**：纯客户端，无后端。
+- **五大治理维度**：总览、代码质量、安全审查、架构分析、性能分析、质量测试，各有独立工作台。
+- **SonarQube 量化扫描**：一键扫描产出 Bugs、漏洞、安全热点、技术债、覆盖率与质量门禁等指标。
+- **AI 分析与修复**：代码质量问题支持单条 / 一键批量修复，安全审查给出处置建议，架构与性能由 AI 生成可视化报告。
+- **测试规划与生成**：AI 推荐缺失测试用例，生成测试代码并写入项目，可一键运行验证。
+- **Issue 生命周期**：修复 / 忽略 / 重新计入，按项目持久化，并按规则记忆修复附言。
+- **多语言支持**：支持多种开发语言。
+
+## 五大维度
+
+| 维度 | 能做什么 |
+|------|---------|
+| **总览** | SonarQube 扫描 + 质量门禁状态 + 五维度评分卡片 |
+| **代码质量** | 问题清单、严重度分布，单条 / 一键批量 AI 修复 |
+| **安全审查** | 漏洞与安全热点列表，AI 给出分析与处置 |
+| **架构分析** | AI 阅读项目代码，生成模块依赖架构图与开发提示 |
+| **性能分析** | AI 识别性能瓶颈与优化机会，产出性能报告 |
+| **质量测试** | AI 规划缺失用例 → 生成测试代码写入项目 → 运行测试 |
+
+## 多语言支持
+
+| 语言 / 技术栈 | 支持 |
+|---------------|:----:|
+| Java | ✓ |
+| Kotlin | ✓ |
+| Python | ✓ |
+| Go | ✓ |
+| C# / .NET | ✓ |
+| JavaScript | ✓ |
+| TypeScript | ✓ |
+| HTML / CSS | ✓ |
+| Vue | ✓ |
+| React | ✓ |
+| Angular | ✓ |
+| Flutter / Dart | ✓ |
+| React Native | ✓ |
+| Swift | ✓ |
+
+---
 
 ## 运行环境要求
 
-| 平台      | 要求                                      |
+| 平台 | 要求 |
 |---------|-----------------------------------------|
 | Windows | 10+，启用「开发者模式」（系统设置 → 开发者选项），Flutter 3.x |
-| macOS   | 12+，Flutter 3.x，Xcode 命令行工具             |
-
-**关键前提：本机已安装 Claude Code CLI**（`claude --version` 可用）。
-安装地址：<https://claude.com/claude-code>
+| macOS | 12+，Flutter 3.x，Xcode 命令行工具 |
 
 ## 开发运行
 
 ```bash
-# 安装依赖
 flutter pub get
 
-# 运行（Windows）
-flutter run -d windows
-
-# 运行（macOS）
-flutter run -d macos
+flutter run -d windows   # Windows
+flutter run -d macos     # macOS
 ```
 
-> 首次启动会进入首启向导，检测 claude 并引导填入 Anthropic API Key。
+> 首次启动进入首启向导：检测本机 claude CLI、引导填入 Anthropic API Key（写入 `~/.claude/settings.json`，与本机 claude 共享）。
 
 ## 打包分发
 
@@ -55,83 +81,56 @@ bash scripts/build-macos.sh
 # 产物：build/kage-macos-<version>.dmg
 ```
 
-macOS 首次分发给其他员工时需进行代码签名 / 公证（否则需右键打开一次）：
+分发给其他员工时需代码签名 / 公证（否则需右键打开一次）：
 
 ```bash
-# 在 Info.plist 中设置团队 ID 后
 flutter build macos --release
 codesign --deep --force --options runtime --sign "Developer ID Application: <Name>" build/macos/Build/Products/Release/Kage.app
 xcrun notarytool submit build/kage-macos-<version>.dmg --keychain-profile "kage" --wait
 xcrun stapler staple build/kage-macos-<version>.dmg
 ```
 
+---
+
 ## 目录结构
 
 ```
 lib/
-├── app/             应用入口、路由、主题、全局 providers
+├── app/             入口、路由、主题、全局 providers
 ├── core/
-│   ├── claude/      ClaudeProcess（spawn + stream-json）、事件类型、检测器
-│   ├── storage/     SettingsService + 写入 ~/.claude/settings.json
-│   └── utils/       平台差异、模板渲染
+│   ├── claude/      ClaudeProcess（spawn + stream-json）、事件类型、CLI 检测
+│   ├── analysis/    各维度 AI 分析器 + 会话控制器 + Prompt 构建
+│   ├── scanners/    SonarQube 扫描器（自动识别 Maven / Gradle / Flutter …）
+│   ├── sonar/       SonarQube 客户端
+│   ├── storage/     SettingsService（写 ~/.claude/settings.json）
+│   └── utils/
 ├── data/
-│   ├── models/      Role / Project / PromptTemplate / Skill / ChatMessage / ChatSession
-│   ├── presets/     内置模板与 Skill 映射加载
-│   └── repositories/ Project / Skills / Session 仓库
+│   ├── models/      Project / AnalysisReport / IssueRecord …
+│   ├── repositories/ Project / Issue / RuleNote 仓库
+│   └── presets/
 ├── features/
-│   ├── home/        主壳：角色 + 项目 + 侧栏
-│   ├── onboarding/  首启向导
-│   ├── projects/    项目（工作目录）管理
-│   ├── chat/        对话窗（流式渲染、停止/重发）
-│   ├── templates/   Prompt 模板面板 + 参数表单
-│   ├── skills/      Skills 面板
-│   ├── sessions/    历史会话面板
-│   └── settings/    全局设置
-└── shared/          （预留）复用组件
-
-assets/presets/
-├── templates/{backend,frontend,product,qa}.json   每角色 5 个模板
-└── skills.json                                    Skill → 角色映射
-
-scripts/
-├── build-windows.ps1   Windows 一键打包
-└── build-macos.sh      macOS 一键打包
+│   ├── home/        主壳：项目选择 + 侧栏导航
+│   ├── overview/    总览仪表板
+│   ├── code_quality/  代码质量（问题清单 + AI 修复）
+│   ├── security_review/ 安全审查
+│   ├── arch_analysis/  架构分析
+│   ├── perf_analysis/  性能分析
+│   ├── quality_test/   质量测试（规划 + 生成 + 执行）
+│   ├── projects/ / settings/ / onboarding/
+└── shared/          widgets / theme
 ```
 
-## 自定义模板与 Skill 映射
+## 工作原理
 
-**Prompt 模板**：编辑 `assets/presets/templates/<role>.json` 后重新打包。
-每个模板支持 `{{param}}` 占位符；`parameters` 数组定义表单字段。
-
-**Skill 角色映射**：编辑 `assets/presets/skills.json`：
-
-```json
-{
-  "skill-name": ["backend", "frontend"]
-}
-```
-
-未在映射中声明的 Skill 默认对所有角色可见。
-
-## 数据存储
-
-| 内容      | 位置                                                                                             |
-|---------|------------------------------------------------------------------------------------------------|
-| 全局设置    | `%APPDATA%\com.kage\shared_preferences.json`（Win）/ `~/Library/Preferences/com.kage.plist`（mac） |
-| 项目列表    | `<app support dir>/Kage/projects.json`                                                         |
-| 会话索引    | `<app support dir>/Kage/sessions/index.json`                                                   |
-| 会话消息    | `<app support dir>/Kage/sessions/messages/<id>.json`                                           |
-| API Key | `~/.claude/settings.json`（与本机 claude 共享）                                                       |
+AI 能力通过调用本机 Claude Code CLI 完成（以 bypass 权限运行，可直接读写项目文件、执行构建与测试命令），基于 `stream-json` 协议实时回传思考、工具调用与结果，由 Kage 解析后做编排与可视化呈现。SonarQube 扫描数据会作为上下文注入，使分析基于真实指标。
 
 ## 安全提示
 
-- 企业 API Key 通过 Kage 写入本机 `~/.claude/settings.json`，分发时请通过 IT 内部文档传递，**不要把
-  Key 硬编码进安装包**。
-- Kage 默认权限模式 `default`，编辑类操作会让用户确认，避免误改代码。
+- AI 以 bypass 权限运行，会直接修改项目源码并执行命令，请在受信任的项目目录上使用。
+- 企业 API Key 通过 Kage 写入本机 `~/.claude/settings.json`，分发时走 IT 内部文档，**切勿硬编码进安装包**。
 
 ## 后续演进
 
-- 后端中转（统一调用审计、配额管控、SSO）
-- 更丰富的代码编辑器内嵌（与 VS Code LSP 联动）
+- 后端中转：统一调用审计、配额管控、SSO
 - 工作目录文件预览与差异展示
-- 角色 RBAC 强限制（当前为软限制）
+- 更细粒度的项目级权限策略

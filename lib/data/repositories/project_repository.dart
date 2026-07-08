@@ -55,13 +55,11 @@ class ProjectRepository {
   Future<KageProject> add({
     required String name,
     required String path,
-    String? sonarProjectKey,
   }) async {
     final project = KageProject(
       id: _uuid.v4(),
       name: name,
       path: path,
-      sonarProjectKey: sonarProjectKey,
     );
     _cache.add(project);
     await _persist();

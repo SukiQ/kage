@@ -1,0 +1,27 @@
+/* 品牌色：取自 logo 橙色渐变 #FF9A1B */
+:root {
+  --vp-c-brand-1: #e6861a;
+  --vp-c-brand-2: #ff9a1b;
+  --vp-c-brand-3: #f07b1f;
+  --vp-c-brand-soft: rgba(255, 154, 27, 0.14);
+}
+
+/* 首页标题渐变 */
+.VPHero .name {
+  background: linear-gradient(120deg, #ff9a1b, #f07b1f);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* 首页 hero 区轻微品牌色辉光 */
+.VPHome .VPHero {
+  background: radial-gradient(60% 50% at 50% 0%, rgba(255, 154, 27, 0.1), transparent 70%);
+}
+
+/* 按钮品牌色 */
+:root {
+  --vp-button-brand-bg: #ff9a1b;
+  --vp-button-brand-hover-bg: #f07b1f;
+  --vp-button-brand-active-bg: #e6861a;
+}
