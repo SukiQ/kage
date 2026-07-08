@@ -1,15 +1,16 @@
 import { defineConfig } from 'vitepress'
 
 export default defineConfig({
+  base: '/kage/',
   lang: 'zh-CN',
   title: 'Kage',
   description: '企业级代码质量治理 IDE',
   lastUpdated: true,
   head: [
-    ['link', { rel: 'icon', href: '/logo.png' }],
+    ['link', { rel: 'icon', href: '/kage/logo.png' }],
     ['meta', { property: 'og:title', content: 'Kage —— 企业级代码质量治理 IDE' }],
     ['meta', { property: 'og:description', content: '扫描 → 分析 → 修复 → 验证，覆盖代码质量、安全、架构、性能、测试五大维度。' }],
-    ['meta', { property: 'og:image', content: '/logo.png' }],
+    ['meta', { property: 'og:image', content: '/kage/logo.png' }],
     ['meta', { property: 'og:type', content: 'website' }],
   ],
   themeConfig: {
