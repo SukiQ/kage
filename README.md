@@ -76,12 +76,23 @@ powershell -ExecutionPolicy Bypass -File scripts\build-windows.ps1
 
 ### macOS
 
+**方式一：Zip 分发（快速）**
+
+```bash
+flutter build macos --release
+zip -r Kage-macos-1.0.0.zip build/macos/Build/Products/Release/Kage.app
+```
+
+下载后解压运行 `Kage.app`。首次运行可能需要右键"打开"绕过 Gatekeeper。
+
+**方式二：Dmg + 签名（生产）**
+
 ```bash
 bash scripts/build-macos.sh
 # 产物：build/kage-macos-<version>.dmg
 ```
 
-分发给其他员工时需代码签名 / 公证（否则需右键打开一次）：
+分发给其他员工时需代码签名 / 公证：
 
 ```bash
 flutter build macos --release

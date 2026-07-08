@@ -15,6 +15,9 @@ class SonarQubeScanner extends Scanner {
 
   final SettingsService _settings;
 
+  /// 子进程环境缓存。登录 shell 解析较慢，结果缓存避免每次扫描都启动 shell。
+  Map<String, String>? _envCache;
+
   /// CLI 扫描最长等待时间（首次运行需下载 sonar 插件，给足时间）。
   static const _cliTimeout = Duration(minutes: 15);
 
@@ -57,6 +60,7 @@ class SonarQubeScanner extends Scanner {
 
     Process? process;
     try {
+      final env = await _buildEnv();
       process = await Process.start(
         cli.executable,
         [
@@ -67,6 +71,7 @@ class SonarQubeScanner extends Scanner {
         ],
         workingDirectory: project.path,
         runInShell: true,
+        environment: env,
       );
 
       // 留存输出用于失败诊断（Maven/Gradle 错误日志走 stdout 的 [ERROR] 行，stderr 常为空）
@@ -154,27 +159,77 @@ class SonarQubeScanner extends Scanner {
 
   // ── 工具方法 ─────────────────────────────────────────────────────────────
 
+  /// 构建子进程环境变量。
+  ///
+  /// macOS/Linux 上，从 GUI/IDE 启动的进程不会加载登录 shell 配置
+  /// （~/.bash_profile、~/.zshrc 等），其 PATH 仅含系统默认目录，不含
+  /// mvn/gradle/java 等，导致 `mvn: command not found`（退出码 127）。
+  /// 这里通过登录 shell 解析出真实 PATH 并合并进来，结果缓存。
+  Future<Map<String, String>> _buildEnv() async {
+    if (_envCache != null) return _envCache!;
+    final env = Map<String, String>.from(Platform.environment);
+    if (!Platform.isWindows) {
+      final loginPath = await _resolveLoginPath();
+      if (loginPath.isNotEmpty) {
+        final base = env['PATH'] ?? '';
+        final seen = <String>{};
+        final merged = <String>[];
+        for (final p in [...base.split(':'), ...loginPath.split(':')]) {
+          if (p.isNotEmpty && seen.add(p)) merged.add(p);
+        }
+        env['PATH'] = merged.join(':');
+      }
+    }
+    _envCache = env;
+    return env;
+  }
+
+  /// 用登录 shell 解析 PATH：bash 加载 ~/.bash_profile，zsh 交互登录加载
+  /// ~/.zprofile + ~/.zshrc。两者 PATH 取并集，覆盖常见配置位置。
+  Future<String> _resolveLoginPath() async {
+    final buffers = <String>[];
+    Future<void> probe(String exe, List<String> args) async {
+      try {
+        final r = await Process.run(exe, args);
+        final out = (r.stdout as String).trim();
+        if (out.isNotEmpty) buffers.add(out);
+      } catch (_) {}
+    }
+
+    await probe('/bin/bash', ['-l', '-c', r'printf "%s" "$PATH"']);
+    if (Platform.isMacOS) {
+      await probe('/bin/zsh', ['-lic', r'printf "%s" "$PATH"']);
+    }
+    return buffers.join(':');
+  }
+
   /// 检测项目目录下可用的 sonar-scanner CLI
   Future<_CliInfo?> _detectScannerCli(String projectPath) async {
-    // Maven 项目
-    final mvnw = File('$projectPath${Platform.pathSeparator}mvnw.cmd');
+    // Maven 项目：优先用项目自带 wrapper（Unix: mvnw / Windows: mvnw.cmd）
+    final mvnw = File('$projectPath${Platform.pathSeparator}mvnw');
+    final mvnwCmd = File('$projectPath${Platform.pathSeparator}mvnw.cmd');
     final pom = File('$projectPath${Platform.pathSeparator}pom.xml');
     if (pom.existsSync()) {
-      final exe = mvnw.existsSync() ? '$projectPath${Platform.pathSeparator}mvnw.cmd' : 'mvn';
+      final hasWrapper = Platform.isWindows ? mvnwCmd.existsSync() : mvnw.existsSync();
+      final exe = hasWrapper ? (Platform.isWindows ? mvnwCmd.path : mvnw.path) : 'mvn';
       return _CliInfo(exe, ['sonar:sonar'], 'Maven Sonar');
     }
 
-    // Gradle 项目
-    final gradlew = File('$projectPath${Platform.pathSeparator}gradlew.bat');
+    // Gradle 项目：优先用项目自带 wrapper（Unix: gradlew / Windows: gradlew.bat）
+    final gradlew = File('$projectPath${Platform.pathSeparator}gradlew');
+    final gradlewBat = File('$projectPath${Platform.pathSeparator}gradlew.bat');
     final gradleGroovy = File('$projectPath${Platform.pathSeparator}build.gradle');
     final gradleKts = File('$projectPath${Platform.pathSeparator}build.gradle.kts');
     if (gradleGroovy.existsSync() || gradleKts.existsSync()) {
-      final exe = gradlew.existsSync() ? '$projectPath${Platform.pathSeparator}gradlew.bat' : 'gradlew';
+      final hasWrapper = Platform.isWindows ? gradlewBat.existsSync() : gradlew.existsSync();
+      final exe = hasWrapper ? (Platform.isWindows ? gradlewBat.path : gradlew.path) : 'gradlew';
       return _CliInfo(exe, ['sonarqube'], 'Gradle Sonar');
     }
 
-    // 通用 sonar-scanner
-    final r = await Process.run('where', ['sonar-scanner'], runInShell: true);
+    // 通用 sonar-scanner（Windows: where / Unix: which），同样需要补全 PATH
+    final lookup = Platform.isWindows ? 'where' : 'which';
+    final r = await Process.run(lookup, ['sonar-scanner'],
+        runInShell: true, environment: await _buildEnv());
     if (r.exitCode == 0) {
       return _CliInfo('sonar-scanner', [], 'sonar-scanner');
     }
