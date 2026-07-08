@@ -18,7 +18,19 @@
 
 👉 [下载 macOS 版（zip）](https://github.com/SukiQ/kage/releases/latest/download/kage-macos-1.0.0.zip) ｜ [查看所有版本](https://github.com/SukiQ/kage/releases)
 
-> 安装包未签名，首次打开需**右键 → 打开**完成 Gatekeeper 放行，之后双击启动即可。解压后运行 `Kage.app`，可拖拽到「应用程序」安装，首启向导会检测 Claude Code CLI 并引导填入 Anthropic API Key。
+> 安装包未签名公证。解压后若双击闪退，是 macOS Gatekeeper 拦截，在「终端」执行以下命令移除隔离属性后即可正常启动（将路径替换为 `Kage.app` 实际位置）：
+>
+> ```bash
+> xattr -dr com.apple.quarantine /Applications/Kage.app
+> ```
+>
+> 若此前多次尝试打开被拦截，系统会缓存拒绝记录导致仍闪退，需重置 LaunchServices 后重试：
+>
+> ```bash
+> /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -seed -lint -r -all local,user,system
+> ```
+>
+> 处理后双击启动即可。可拖拽到「应用程序」安装，首启向导会检测 Claude Code CLI 并引导填入 Anthropic API Key。
 
 ::: info 关于下载链接
 下载来自 GitHub Releases。若上方链接无法下载，请先到 [Releases](https://github.com/SukiQ/kage/releases) 页确认已发布对应版本（tag `v1.0.0`）并上传了 `kage-windows-1.0.0.zip` / `kage-macos-1.0.0.zip`。
