@@ -1,5 +1,5 @@
 name: kage
-description: "Kage - Enterprise Claude Code IDE for backend/frontend/PM/QA roles."
+description: "Kage - A Claude Code-powered desktop IDE for code quality governance: scan, analyze, fix and verify across code quality, security, architecture, performance and testing."
 publish_to: 'none'
 version: 1.0.0+1
 
