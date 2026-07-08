@@ -13,7 +13,7 @@
 ## macOS
 
 - **版本**：1.0.0
-- **大小**：约 254 MB（zip）
+- **大小**：约 42 MB（zip）
 - **系统要求**：macOS 12+
 
 👉 [下载 macOS 版（zip）](https://github.com/SukiQ/kage/releases/latest/download/kage-macos-1.0.0.zip) ｜ [查看所有版本](https://github.com/SukiQ/kage/releases)

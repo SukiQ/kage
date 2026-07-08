@@ -80,8 +80,10 @@ powershell -ExecutionPolicy Bypass -File scripts\build-windows.ps1
 
 ```bash
 flutter build macos --release
-zip -r Kage-macos-1.0.0.zip build/macos/Build/Products/Release/Kage.app
+ditto -c -k --keepParent build/macos/Build/Products/Release/Kage.app kage-macos-1.0.0.zip
 ```
+
+> 必须用 `ditto` 而非 `zip -r`：`zip -r` 会跟随 framework 内的符号链接（如 `Versions/Current → A`）将其展开成实体目录，破坏 app bundle 结构与代码签名，导致解压后启动闪退。`ditto` 是 macOS 原生工具，正确保留符号链接、权限与签名，体积也更小（42MB vs 254MB）。
 
 下载后解压运行 `Kage.app`。首次运行可能需要右键"打开"绕过 Gatekeeper。
 
