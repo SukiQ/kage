@@ -13,11 +13,12 @@
 ## macOS
 
 - **版本**：1.0.0
+- **大小**：约 48 MB（dmg）
 - **系统要求**：macOS 12+
 
-::: tip 即将上线
-macOS 安装包（.dmg）即将发布。在此之前，可在 macOS 上自行从源码构建，参见[开发与打包](/guide/dev)。
-:::
+👉 [下载 macOS 版（dmg）](https://github.com/SukiQ/kage/releases/latest/download/kage-macos-1.0.0.dmg) ｜ [查看所有版本](https://github.com/SukiQ/kage/releases)
+
+> 安装包未签名，首次打开需**右键 → 打开**完成 Gatekeeper 放行，之后双击启动即可。拖拽到「应用程序」安装，首启向导会检测 Claude Code CLI 并引导填入 Anthropic API Key。
 
 ::: info 关于下载链接
 下载来自 GitHub Releases。若上方链接无法下载，请先到 [Releases](https://github.com/SukiQ/kage/releases) 页确认已发布对应版本（tag `v1.0.0`）并上传了 `kage-windows-1.0.0.zip` / `kage-macos-1.0.0.dmg`。
