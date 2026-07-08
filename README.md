@@ -76,18 +76,21 @@ powershell -ExecutionPolicy Bypass -File scripts\build-windows.ps1
 
 ### macOS
 
-**方式一：Zip 分发（快速）**
+**方式一：Dmg 分发（推荐）**
 
 ```bash
 flutter build macos --release
-ditto -c -k --keepParent build/macos/Build/Products/Release/Kage.app kage-macos-1.0.0.zip
+STAGING=$(mktemp -d)
+ditto build/macos/Build/Products/Release/Kage.app "$STAGING/Kage.app"
+ln -s /Applications "$STAGING/Applications"
+hdiutil create -volname "Kage 1.0.0" -srcfolder "$STAGING" -ov -format UDZO kage-macos-1.0.0.dmg
 ```
 
-> 必须用 `ditto` 而非 `zip -r`：`zip -r` 会跟随 framework 内的符号链接（如 `Versions/Current → A`）将其展开成实体目录，破坏 app bundle 结构与代码签名，导致解压后启动闪退。`ditto` 是 macOS 原生工具，正确保留符号链接、权限与签名，体积也更小（42MB vs 254MB）。
+> 必须用 `hdiutil`/`ditto` 而非 `zip -r`：`zip -r` 会跟随 framework 内的符号链接（如 `Versions/Current → A`）将其展开成实体目录，破坏 app bundle 结构与代码签名，导致解压后启动闪退。dmg 原生保留符号链接与签名，且支持拖拽安装。
 
-下载后解压运行 `Kage.app`。首次运行可能需要右键"打开"绕过 Gatekeeper。
+下载者双击挂载 dmg，拖 `Kage.app` 到「应用程序」。未签名公证，首次打开需移除隔离属性：`xattr -dr com.apple.quarantine /Applications/Kage.app`。
 
-**方式二：Dmg + 签名（生产）**
+**方式二：签名公证（企业分发，免除 Gatekeeper 拦截）**
 
 ```bash
 bash scripts/build-macos.sh

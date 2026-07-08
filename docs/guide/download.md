@@ -13,12 +13,12 @@
 ## macOS
 
 - **版本**：1.0.0
-- **大小**：约 42 MB（zip）
+- **大小**：约 47 MB（dmg）
 - **系统要求**：macOS 12+
 
-👉 [下载 macOS 版（zip）](https://github.com/SukiQ/kage/releases/latest/download/kage-macos-1.0.0.zip) ｜ [查看所有版本](https://github.com/SukiQ/kage/releases)
+👉 [下载 macOS 版（dmg）](https://github.com/SukiQ/kage/releases/latest/download/kage-macos-1.0.0.dmg) ｜ [查看所有版本](https://github.com/SukiQ/kage/releases)
 
-> 安装包未签名公证。解压后若双击闪退，是 macOS Gatekeeper 拦截，在「终端」执行以下命令移除隔离属性后即可正常启动（将路径替换为 `Kage.app` 实际位置）：
+> 安装包未签名公证。双击挂载 dmg，将 `Kage.app` 拖到「应用程序」即可。若打开时闪退，是 macOS Gatekeeper 拦截，在「终端」执行以下命令移除隔离属性后即可正常启动：
 >
 > ```bash
 > xattr -dr com.apple.quarantine /Applications/Kage.app
@@ -30,8 +30,8 @@
 > /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -seed -lint -r -all local,user,system
 > ```
 >
-> 处理后双击启动即可。可拖拽到「应用程序」安装，首启向导会检测 Claude Code CLI 并引导填入 Anthropic API Key。
+> 首启向导会检测 Claude Code CLI 并引导填入 Anthropic API Key。
 
 ::: info 关于下载链接
-下载来自 GitHub Releases。若上方链接无法下载，请先到 [Releases](https://github.com/SukiQ/kage/releases) 页确认已发布对应版本（tag `v1.0.0`）并上传了 `kage-windows-1.0.0.zip` / `kage-macos-1.0.0.zip`。
+下载来自 GitHub Releases。若上方链接无法下载，请先到 [Releases](https://github.com/SukiQ/kage/releases) 页确认已发布对应版本（tag `v1.0.0`）并上传了 `kage-windows-1.0.0.zip` / `kage-macos-1.0.0.dmg`。
 :::
